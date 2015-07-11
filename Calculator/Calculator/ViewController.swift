@@ -11,11 +11,18 @@ import UIKit
 class ViewController: UIViewController {
 
     @IBOutlet weak var display: UILabel!
+    @IBOutlet weak var history: UILabel!
     
     var userIsTyping = false
+    var operandStack = [Double]()
     
     @IBAction func appendDigit(sender: UIButton) {
         let digit = sender.currentTitle!
+        if digit == "." {
+            if display.text!.rangeOfString(".") != nil {
+                return
+            }
+        }
         if userIsTyping {
             display.text = display.text! + digit
         } else {
@@ -27,37 +34,62 @@ class ViewController: UIViewController {
     
     @IBAction func operate(sender: UIButton) {
         let operation = sender.currentTitle!
-        switch operation{
-        case "×": performOperation { $0 * $1 }
-        case "÷": performOperation { $1 / $0 }
-        case "+": performOperation { $0 + $1 }
-        case "−": performOperation { $1 - $0 }
-        case "√": performOperation { sqrt($0) }
+        switch operation {
+        case "×": performOperation ("×", operation: { $0 * $1 })
+        case "÷": performOperation ("÷", operation: { $1 / $0 })
+        case "+": performOperation ("+", operation: { $0 + $1 })
+        case "−": performOperation ("−", operation: { $1 - $0 })
+        case "√": performOperation ("√", operation: { sqrt($0) })
+        case "sin": performOperation ("sin", operation: { sin($0) })
+        case "cos": performOperation ("cos", operation: { cos($0) })
         default: break
         }
     }
     
-    private func performOperation(operation: (Double, Double) -> Double) {
+    private func performOperation(symbol: String, operation: (Double, Double) -> Double) {
+        if userIsTyping { enterButton() } //
         if operandStack.count >= 2 {
+            appendHistory(symbol)
             displayValue = operation(operandStack.removeLast(), operandStack.removeLast())
-            enter()
+            enter() //
         }
     }
     
-    private func performOperation(operation: Double -> Double) {
+    private func performOperation(symbol: String, operation: Double -> Double) {
+        if userIsTyping { enterButton() } //
         if operandStack.count >= 1 {
+            appendHistory(symbol)
             displayValue = operation(operandStack.removeLast())
-            enter()
+            enter() //
         }
+    }
+    
+    @IBAction func constant(sender: UIButton) {
+        let constant = sender.currentTitle!
+        switch constant {
+        case "π": constEntered( "π", constant: M_PI )
+        default: break
+        }
+    }
+    
+    private func constEntered(symbol: String, constant: Double) {
+        if userIsTyping { enter() } //
+        appendHistory(symbol)
+        displayValue = constant
+        enter() //
+    }
+    
+    @IBAction func enterButton() {
+        userIsTyping = false
+        operandStack.append(displayValue)
+        appendHistory(display.text!)
     }
 
-    var operandStack = [Double]()
-    
-    @IBAction func enter() {
+    private func enter() {
         userIsTyping = false
         operandStack.append(displayValue)
     }
-
+    
     var displayValue: Double {
         get {
             return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
@@ -66,6 +98,10 @@ class ViewController: UIViewController {
             display.text = "\(newValue)"
             userIsTyping = false
         }
+    }
+    
+    private func appendHistory(stringToAdd: String) {
+        history.text! += " " + stringToAdd
     }
 }
 
