@@ -10,12 +10,20 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    @IBOutlet weak var display: UILabel!
-    @IBOutlet weak var history: UILabel!
+    @IBOutlet weak var display: UILabel! // Calculator display.
+    @IBOutlet weak var history: UILabel! // History display.
     
     var userIsTyping = false
     var operandStack = [Double]()
     
+    // Clears operandStack, resets calculator display & history.
+    @IBAction func clear() {
+        operandStack = [Double]()
+        history.text = ""
+        display.text = "0"
+    }
+    
+    // Handles input of numbers.
     @IBAction func appendDigit(sender: UIButton) {
         let digit = sender.currentTitle!
         if digit == "." {
@@ -29,9 +37,9 @@ class ViewController: UIViewController {
             display.text = digit
             userIsTyping = true
         }
-        
     }
     
+    // Handles operations.
     @IBAction func operate(sender: UIButton) {
         let operation = sender.currentTitle!
         switch operation {
@@ -46,24 +54,27 @@ class ViewController: UIViewController {
         }
     }
     
+    // Private function takes care of operations requiring two numbers.
     private func performOperation(symbol: String, operation: (Double, Double) -> Double) {
-        if userIsTyping { enterButton() } //
+        if userIsTyping { enterButton() }
         if operandStack.count >= 2 {
             appendHistory(symbol)
             displayValue = operation(operandStack.removeLast(), operandStack.removeLast())
-            enter() //
+            enter()
         }
     }
     
+    // Private function takes care of operations requiring one number.
     private func performOperation(symbol: String, operation: Double -> Double) {
-        if userIsTyping { enterButton() } //
+        if userIsTyping { enterButton() }
         if operandStack.count >= 1 {
             appendHistory(symbol)
             displayValue = operation(operandStack.removeLast())
-            enter() //
+            enter()
         }
     }
     
+    // Handles constants.
     @IBAction func constant(sender: UIButton) {
         let constant = sender.currentTitle!
         switch constant {
@@ -72,24 +83,28 @@ class ViewController: UIViewController {
         }
     }
     
+    // Private function allows for easily extendable constant function.
     private func constEntered(symbol: String, constant: Double) {
-        if userIsTyping { enter() } //
+        if userIsTyping { enter() }
         appendHistory(symbol)
         displayValue = constant
-        enter() //
+        enter()
     }
     
+    // Adds number to stack and calculator history.
     @IBAction func enterButton() {
         userIsTyping = false
         operandStack.append(displayValue)
         appendHistory(display.text!)
     }
 
+    // Adds number to stack.
     private func enter() {
         userIsTyping = false
         operandStack.append(displayValue)
     }
     
+    // Converts display string to a double.
     var displayValue: Double {
         get {
             return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
@@ -100,6 +115,7 @@ class ViewController: UIViewController {
         }
     }
     
+    // Add operands and operations to history.
     private func appendHistory(stringToAdd: String) {
         history.text! += " " + stringToAdd
     }
