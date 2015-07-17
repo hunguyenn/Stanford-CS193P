@@ -14,13 +14,13 @@ class ViewController: UIViewController {
     @IBOutlet weak var history: UILabel! // History display.
     
     var userIsTyping = false
-    var operandStack = [Double]()
+    var brain = CalculatorBrain()
     
     // Clears operandStack, resets calculator display & history.
     @IBAction func clear() {
-        operandStack = [Double]()
-        history.text = ""
-        display.text = "0"
+        history.text = " "
+        displayValue = 0
+        brain.clear()
     }
     
     // Handles input of numbers.
@@ -41,36 +41,16 @@ class ViewController: UIViewController {
     
     // Handles operations.
     @IBAction func operate(sender: UIButton) {
-        let operation = sender.currentTitle!
-        switch operation {
-        case "×": performOperation ("×", operation: { $0 * $1 })
-        case "÷": performOperation ("÷", operation: { $1 / $0 })
-        case "+": performOperation ("+", operation: { $0 + $1 })
-        case "−": performOperation ("−", operation: { $1 - $0 })
-        case "√": performOperation ("√", operation: { sqrt($0) })
-        case "sin": performOperation ("sin", operation: { sin($0) })
-        case "cos": performOperation ("cos", operation: { cos($0) })
-        default: break
+        if userIsTyping {
+            enterButton()
         }
-    }
-    
-    // Private function takes care of operations requiring two numbers.
-    private func performOperation(symbol: String, operation: (Double, Double) -> Double) {
-        if userIsTyping { enterButton() }
-        if operandStack.count >= 2 {
-            appendHistory(symbol)
-            displayValue = operation(operandStack.removeLast(), operandStack.removeLast())
-            enter()
-        }
-    }
-    
-    // Private function takes care of operations requiring one number.
-    private func performOperation(symbol: String, operation: Double -> Double) {
-        if userIsTyping { enterButton() }
-        if operandStack.count >= 1 {
-            appendHistory(symbol)
-            displayValue = operation(operandStack.removeLast())
-            enter()
+        if let operation = sender.currentTitle {
+            if let result = brain.performOperation(operation) {
+                displayValue = result
+                appendHistory(operation)
+            } else {
+                displayValue = 0
+            }
         }
     }
     
@@ -78,14 +58,14 @@ class ViewController: UIViewController {
     @IBAction func constant(sender: UIButton) {
         let constant = sender.currentTitle!
         switch constant {
-        case "π": constEntered( "π", constant: M_PI )
+        case "π": constEntered("π", constant: M_PI )
         default: break
         }
     }
     
     // Private function allows for easily extendable constant function.
     private func constEntered(symbol: String, constant: Double) {
-        if userIsTyping { enter() }
+        if userIsTyping { enterButton() }
         appendHistory(symbol)
         displayValue = constant
         enter()
@@ -94,24 +74,41 @@ class ViewController: UIViewController {
     // Adds number to stack and calculator history.
     @IBAction func enterButton() {
         userIsTyping = false
-        operandStack.append(displayValue)
         appendHistory(display.text!)
+        if let result = brain.pushOperand(displayValue) {
+            displayValue = result
+        } else {
+            displayValue = 0
+        }
     }
 
     // Adds number to stack.
     private func enter() {
         userIsTyping = false
-        operandStack.append(displayValue)
+        if let result = brain.pushOperand(displayValue) {
+            displayValue = result
+        } else {
+            displayValue = 0
+        }
     }
     
-    // Converts display string to a double.
-    var displayValue: Double {
+    // Converts display string to a double. -> Computed Value
+    var displayValue: Double? {
         get {
-            return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
+            // should return nil when this fails
+            if let num = NSNumberFormatter().numberFromString(display.text!) {
+                return num.doubleValue
+            } else {
+                return nil
+            }
         }
         set {
-            display.text = "\(newValue)"
-            userIsTyping = false
+            if newValue != nil {
+                display.text = "\(newValue!)"
+                userIsTyping = false
+            } else {
+                clear()
+            }
         }
     }
     
