@@ -152,16 +152,22 @@
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vB8-jX-Gmh">
                                 <rect key="frame" x="24" y="225" width="86" height="117"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="28"/>
-                                <state key="normal">
+                                <state key="normal" title="M">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
+                                <connections>
+                                    <action selector="constant:" destination="BYZ-38-t0r" eventType="touchUpInside" id="3Cy-aN-g9c"/>
+                                </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="o80-OT-P95">
                                 <rect key="frame" x="24" y="350" width="86" height="117"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="28"/>
-                                <state key="normal">
+                                <state key="normal" title="→M">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
+                                <connections>
+                                    <action selector="arrowMButton" destination="BYZ-38-t0r" eventType="touchUpInside" id="tvj-2o-fvO"/>
+                                </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="373-H2-Ftk">
                                 <rect key="frame" x="304" y="475" width="86" height="117"/>

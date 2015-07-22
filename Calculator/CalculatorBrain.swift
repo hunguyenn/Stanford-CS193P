@@ -6,12 +6,15 @@
 //  Copyright (c) 2015 Hung Nguyen. All rights reserved.
 //
 
+// TO DO: 7efg, make PI automatically multiply (or any constant)
+
 import Foundation
 
 class CalculatorBrain
 {
     private enum Op: Printable {
         case Operand(Double)
+        case Variable(String)
         case UnaryOperation(String, Double -> Double)
         case BinaryOperation(String, (Double, Double) -> Double)
         var description: String {
@@ -23,6 +26,8 @@ class CalculatorBrain
                     return symbol
                 case .BinaryOperation(let symbol, _):
                     return symbol
+                case .Variable(let variable):
+                    return variable
                 }
             }
         }
@@ -39,10 +44,12 @@ class CalculatorBrain
         learnOp(Op.BinaryOperation("×", *))
         learnOp(Op.BinaryOperation("÷") { $1 / $0 })
         learnOp(Op.BinaryOperation("+", +))
-        learnOp(Op.BinaryOperation("−") { $1 / $0 })
+        learnOp(Op.BinaryOperation("−") { $1 - $0 })
         learnOp(Op.UnaryOperation("√", sqrt))
         learnOp(Op.UnaryOperation("sin", sin))
         learnOp(Op.UnaryOperation("cos", cos))
+        variableValues["π"] = M_PI
+        
     }
     
     private func evaluate(ops: [Op]) -> (result: Double?, remainingOps: [Op]) {
@@ -50,6 +57,8 @@ class CalculatorBrain
             var remainingOps = ops
             let op = remainingOps.removeLast()
             switch op {
+            case .Variable(let variable):
+                return (variableValues[variable], remainingOps)
             case .Operand(let operand):
                 return (operand, remainingOps)
             case .UnaryOperation(_, let operation):
@@ -88,7 +97,7 @@ class CalculatorBrain
     func pushOperand(symbol: String) -> Double? {
         // access the number associated with variable
         if let num = variableValues[symbol] {
-            opStack.append(Op.Operand(num))
+            opStack.append(Op.Variable(symbol))
             return evaluate()
         } else {
             return nil
@@ -101,6 +110,10 @@ class CalculatorBrain
         return pushOperand(symbol)
     }
     
+    func getValue(symbol: String) -> Double? {
+        return variableValues[symbol]
+    }
+    
     func performOperation(symbol: String) -> Double? {
         if let operation = knownOps[symbol] {
             opStack.append(operation)
@@ -110,5 +123,57 @@ class CalculatorBrain
     
     func clear() {
         opStack.removeAll()
+    }
+    
+    var description: String {
+        get {
+            var tempString = ""
+            var tempArray = [String]()
+            var currDescription = description(opStack)
+            tempArray.append(currDescription.parsedString)
+            while !currDescription.remainingOps.isEmpty {
+                currDescription = description(currDescription.remainingOps)
+                tempArray.append(currDescription.parsedString)
+            }
+            for str in tempArray.reverse() {
+                if tempString != "" {
+                    tempString += ", "
+                }
+                tempString += str
+            }
+            return tempString
+        }
+    }
+    
+    private func description(ops: [Op]) -> (parsedString: String, remainingOps: [Op]) {
+        if !ops.isEmpty {
+            var remainingOps = ops
+            let op = remainingOps.removeLast()
+            switch op {
+            case .Operand(let operand):
+                return ("\(Int(operand))", remainingOps)
+            case .Variable(let variable):
+                return (variable, remainingOps)
+            case .UnaryOperation(let symbol, _):
+                var recurse = description(remainingOps)
+                return (symbol + "(" + recurse.parsedString + ")", recurse.remainingOps)
+            case .BinaryOperation(let symbol, _):
+                var r1 = description(remainingOps)
+                var r2 = description(r1.remainingOps)
+                var tempString = ""
+                if r2.parsedString != "" { tempString += r2.parsedString }
+                else { tempString += "?" }
+                tempString += symbol
+                if NSNumberFormatter().numberFromString(r1.parsedString) != nil || r1.parsedString.rangeOfString("(") != nil {
+                    tempString += r1.parsedString
+                } else {
+                    tempString += "(" + r1.parsedString + ")"
+                }
+                return (tempString, r2.remainingOps)
+                }
+            }
+        else {
+            return ("", ops)
+        }
     }
 }

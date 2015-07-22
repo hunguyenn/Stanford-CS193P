@@ -47,7 +47,7 @@ class ViewController: UIViewController {
         if let operation = sender.currentTitle {
             if let result = brain.performOperation(operation) {
                 displayValue = result
-                appendHistory(operation)
+                updateHistory()
             } else {
                 displayValue = 0
             }
@@ -58,23 +58,33 @@ class ViewController: UIViewController {
     @IBAction func constant(sender: UIButton) {
         let constant = sender.currentTitle!
         switch constant {
-        case "π": constEntered("π", constant: M_PI )
+        case "π": constEntered("π", constant: M_PI)
+        case "M":
+            if let value = brain.getValue("M") {
+                constEntered("M", constant: brain.getValue("M")!)
+            }
         default: break
         }
+    }
+    
+    @IBAction func arrowMButton() {
+        brain.setVariable("M", value: displayValue!)
+        userIsTyping = false
     }
     
     // Private function allows for easily extendable constant function.
     private func constEntered(symbol: String, constant: Double) {
         if userIsTyping { enterButton() }
-        appendHistory(symbol)
+        updateHistory()
         displayValue = constant
-        enter()
+        brain.pushOperand(symbol)
+        // enter()
     }
     
     // Adds number to stack and calculator history.
     @IBAction func enterButton() {
         userIsTyping = false
-        appendHistory(display.text!)
+        updateHistory()
         if let result = brain.pushOperand(displayValue) {
             displayValue = result
         } else {
@@ -113,8 +123,8 @@ class ViewController: UIViewController {
     }
     
     // Add operands and operations to history.
-    private func appendHistory(stringToAdd: String) {
-        history.text! += " " + stringToAdd
+    private func updateHistory() {
+        history.text! = brain.description + " ="
     }
 }
 
